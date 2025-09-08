@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Load Test Data for Nordea HH Squash Ladder</title>
+</head>
+<body>
+    <h1>Load Test Data</h1>
+    <p>Click the button below to load test user accounts and ladder data:</p>
+    <button onclick="loadTestData()">Load Test Data</button>
+    <div id="result"></div>
+
+    <script>
+        function loadTestData() {
+            const testUsers = [
+                {
+                    id: 1001,
+                    email: 'alex.hansen@nordea.com',
+                    password: 'Password123',
+                    displayName: 'Alex Hansen',
+                    role: 'player',
+                    createdAt: '2024-08-15T10:00:00.000Z',
+                    isVerified: true
+                },
+                {
+                    id: 1002,
+                    email: 'maria.larsen@nordea.com',
+                    password: 'Password123',
+                    displayName: 'Maria Larsen',
+                    role: 'player',
+                    createdAt: '2024-08-20T11:30:00.000Z',
+                    isVerified: true
+                },
+                {
+                    id: 1003,
+                    email: 'erik.nielsen@nordea.com',
+                    password: 'Password123',
+                    displayName: 'Erik Nielsen',
+                    role: 'player',
+                    createdAt: '2024-08-25T09:15:00.000Z',
+                    isVerified: true
+                },
+                {
+                    id: 1004,
+                    email: 'sofia.andersen@nordea.com',
+                    password: 'Password123',
+                    displayName: 'Sofia Andersen',
+                    role: 'player',
+                    createdAt: '2024-09-01T14:20:00.000Z',
+                    isVerified: true
+                },
+                {
+                    id: 1005,
+                    email: 'thomas.jensen@nordea.com',
+                    password: 'Password123',
+                    displayName: 'Thomas Jensen',
+                    role: 'player',
+                    createdAt: '2024-09-03T16:45:00.000Z',
+                    isVerified: true
+                }
+            ];
+
+            const testPlayers = [
+                {
+                    id: 2001,
+                    name: 'Alex Hansen',
+                    position: 1,
+                    participationPoints: 3,
+                    wins: 12,
+                    losses: 3,
+                    joinDate: '2024-08-15',
+                    isActive: true
+                },
+                {
+                    id: 2002,
+                    name: 'Maria Larsen', 
+                    position: 2,
+                    participationPoints: 2,
+                    wins: 10,
+                    losses: 5,
+                    joinDate: '2024-08-20',
+                    isActive: true
+                },
+                {
+                    id: 2003,
+                    name: 'Erik Nielsen',
+                    position: 3,
+                    participationPoints: 1,
+                    wins: 8,
+                    losses: 7,
+                    joinDate: '2024-08-25',
+                    isActive: true
+                },
+                {
+                    id: 2004,
+                    name: 'Sofia Andersen',
+                    position: 4,
+                    participationPoints: 2,
+                    wins: 6,
+                    losses: 4,
+                    joinDate: '2024-09-01',
+                    isActive: true
+                },
+                {
+                    id: 2005,
+                    name: 'Thomas Jensen',
+                    position: 5,
+                    participationPoints: 0,
+                    wins: 3,
+                    losses: 2,
+                    joinDate: '2024-09-03',
+                    isActive: true
+                }
+            ];
+
+            const testChallenges = [
+                {
+                    id: 3001,
+                    challengerId: 2003,
+                    challengedId: 2002,
+                    status: 'pending',
+                    createdDate: '2024-09-04',
+                    expiryDate: '2024-09-25'
+                },
+                {
+                    id: 3002,
+                    challengerId: 2005,
+                    challengedId: 2004,
+                    status: 'accepted',
+                    createdDate: '2024-09-02',
+                    expiryDate: '2024-09-23'
+                }
+            ];
+
+            const testMatches = [
+                {
+                    id: 4001,
+                    player1Id: 2001,
+                    player2Id: 2002,
+                    player1Score: '11',
+                    player2Score: '8',
+                    winnerId: 2001,
+                    date: '2024-08-28',
+                    isWalkover: false
+                },
+                {
+                    id: 4002,
+                    player1Id: 2003,
+                    player2Id: 2004,
+                    player1Score: '11',
+                    player2Score: '6',
+                    winnerId: 2003,
+                    date: '2024-08-30',
+                    isWalkover: false
+                },
+                {
+                    id: 4003,
+                    player1Id: 2002,
+                    player2Id: 2003,
+                    player1Score: 'WO',
+                    player2Score: 'WO',
+                    winnerId: 2002,
+                    date: '2024-09-01',
+                    isWalkover: true
+                }
+            ];
+
+            localStorage.setItem('nordea_hh_squash_users', JSON.stringify(testUsers));
+            localStorage.setItem('nordea_hh_squash_players', JSON.stringify(testPlayers));
+            localStorage.setItem('nordea_hh_squash_challenges', JSON.stringify(testChallenges));
+            localStorage.setItem('nordea_hh_squash_matches', JSON.stringify(testMatches));
+            
+            document.getElementById('result').innerHTML = `
+                <h2>Test data loaded successfully!</h2>
+                <h3>Test User Accounts:</h3>
+                <ul>
+                    <li><strong>alex.hansen@nordea.com</strong> / Password123 (Position #1)</li>
+                    <li><strong>maria.larsen@nordea.com</strong> / Password123 (Position #2)</li>
+                    <li><strong>erik.nielsen@nordea.com</strong> / Password123 (Position #3)</li>
+                    <li><strong>sofia.andersen@nordea.com</strong> / Password123 (Position #4)</li>
+                    <li><strong>thomas.jensen@nordea.com</strong> / Password123 (Position #5)</li>
+                </ul>
+                <p><strong>Now go back to your squash ladder app and refresh the page to see the test data!</strong></p>
+            `;
+        }
+    </script>
+</body>
+</html>
