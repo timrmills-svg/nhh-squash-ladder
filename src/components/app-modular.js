@@ -2,6 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Target, Activity, TrendingUp, User, Users, Lock, FileText } from 'lucide-react';
 
 import AuthComponent from './auth';
+import { 
+  getPlayers, 
+  getChallenges, 
+  getMatches, 
+  addPlayer, 
+  addChallenge, 
+  addMatch, 
+  updatePlayer, 
+  updateChallenge, 
+  subscribeToPlayers, 
+  subscribeToChallenges 
+} from "../services/firebaseService";
 import LadderView from './ladder';
 import ChallengesView from './challenges';
 import { 
@@ -86,31 +98,20 @@ const SquashLadderApp = () => {
     }
   }, [currentUser]);
 
-  const loadAppData = () => {
+  const loadAppData = async () => {
+    setIsLoading(true);
     try {
-      if (currentUser) {
-        const savedPlayers = localStorage.getItem('nordea_hh_squash_players');
-        const savedChallenges = localStorage.getItem('nordea_hh_squash_challenges');
-        const savedMatches = localStorage.getItem('nordea_hh_squash_matches');
-
-        if (savedPlayers) {
-          setPlayers(JSON.parse(savedPlayers));
-        }
-
-        if (savedChallenges) {
-          setChallenges(JSON.parse(savedChallenges));
-        }
-
-        if (savedMatches) {
-          setMatches(JSON.parse(savedMatches));
-        }
-      } else {
-        setPlayers([]);
-        setChallenges([]);
-        setMatches([]);
-      }
+      const [playersData, challengesData, matchesData] = await Promise.all([
+        getPlayers(),
+        getChallenges(),
+        getMatches()
+      ]);
+      
+      setPlayers(playersData);
+      setChallenges(challengesData);
+      setMatches(matchesData);
     } catch (error) {
-      console.error('Error loading app data:', error);
+      console.error("Error loading data:", error);
     } finally {
       setIsLoading(false);
     }
