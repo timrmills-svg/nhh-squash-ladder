@@ -315,8 +315,6 @@ const AuthComponent = ({ onAuthStateChange, currentUser }) => {
             </div>
           )}
 
-          <Button
-          </Button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
