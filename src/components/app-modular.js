@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Target, Activity, TrendingUp, User, Users, Lock, FileText } from 'lucide-react';
 
-import AuthComponent, { useAuth } from './auth';
+import AuthComponent from './auth';
 import LadderView from './ladder';
 import ChallengesView from './challenges';
 import { 
@@ -13,8 +13,9 @@ import {
 } from './shared';
 
 const SquashLadderApp = () => {
-  const { currentUser, updateAuthState } = useAuth();
+  
   const [currentView, setCurrentView] = useState('ladder');
+  const [currentUser, setCurrentUser] = useState(null);
   const [players, setPlayers] = useState([]);
   const [challenges, setChallenges] = useState([]);
   const [matches, setMatches] = useState([
@@ -460,7 +461,7 @@ const SquashLadderApp = () => {
               </div>
             )}
 
-            <AuthComponent
+            <AuthComponent onAuthStateChange={setCurrentUser}
               onAuthStateChange={updateAuthState}
               currentUser={currentUser}
             />
