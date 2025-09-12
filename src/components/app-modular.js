@@ -171,61 +171,19 @@ const SquashLadderApp = () => {
     };
   };
 
-  const handleCreateChallenge = (challengerId, challengedId) => {
-    if (!currentUser) {
-      alert('Please login to create challenges');
+  const handleCreateChallenge = async (challengerId, challengedId) => {
+    try {
+      const newChallenge = createNewChallenge(challengerId, challengedId, players);
+      await addChallenge(newChallenge);
+      
+      const updatedChallenges = await getChallenges();
+      setChallenges(updatedChallenges);
+      
+      alert("Challenge created successfully!");
+    } catch (error) {
+      console.error("Error creating challenge:", error);
+      alert("Error creating challenge. Please try again.");
     }
-
-    // Check if challenger has any active challenges
-    const challengerActiveChallenge = challenges.find(c => 
-      (c.challengerId === challengerId || c.challengedId === challengerId) && 
-      (c.status === "pending" || c.status === "accepted")
-    );
-    
-    if (challengerActiveChallenge) {
-      alert("You already have an active challenge. Complete your current challenge before creating a new one.");
-      return;
-    }
-    
-    // Check if challenged player has any active challenges
-    const challengedActiveChallenge = challenges.find(c => 
-      (c.challengerId === challengedId || c.challengedId === challengedId) && 
-      (c.status === "pending" || c.status === "accepted")
-    );
-    
-    if (challengedActiveChallenge) {
-      const challenged = players.find(p => p.id === challengedId);
-      alert(`${challenged?.name} already has an active challenge and cannot be challenged.`);
-      return;
-      return;
-    }
-
-    const challenger = players.find(p => p.id === challengerId);
-    const challenged = players.find(p => p.id === challengedId);
-
-    if (!challenger || !challenged) {
-      alert('Invalid player selection');
-      return;
-    }
-
-    if (challenger.position <= challenged.position) {
-      alert('You can only challenge players above you on the ladder');
-      return;
-    }
-
-    const existingChallenge = challenges.find(c => 
-      c.challengerId === challengerId && 
-      c.challengedId === challengedId && 
-      c.status === 'pending'
-    );
-
-    if (existingChallenge) {
-      alert('A challenge already exists between these players');
-      return;
-    }
-
-    const newChallenge = createNewChallenge(challengerId, challengedId);
-    setChallenges(prev => [...prev, newChallenge]);
   };
 
   const handleChallengeResponse = (challengeId, response) => {
