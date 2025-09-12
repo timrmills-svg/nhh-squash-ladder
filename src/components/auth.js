@@ -71,7 +71,22 @@ const AuthComponent = ({ onAuthStateChange }) => {
       setShowAuthModal(false);
       resetForm();
     } catch (error) {
-      setErrors({ general: error.message });
+        // Convert Firebase errors to user-friendly messages
+        let friendlyMessage = "Login failed. Please try again.";
+        if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+          friendlyMessage = "Invalid email or password. Please check your credentials.";
+        } else if (error.code === "auth/invalid-email") {
+          friendlyMessage = "Please enter a valid email address.";
+        } else if (error.code === "auth/weak-password") {
+          friendlyMessage = "Password should be at least 6 characters long.";
+        } else if (error.code === "auth/email-already-in-use") {
+          friendlyMessage = "An account with this email already exists. Try signing in instead.";
+        } else if (error.code === "auth/network-request-failed") {
+          friendlyMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("api-key-not-valid")) {
+          friendlyMessage = "Service temporarily unavailable. Please try again later.";
+        }
+        setErrors({ general: friendlyMessage });
     } finally {
       setIsLoading(false);
     }
