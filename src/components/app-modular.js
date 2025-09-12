@@ -421,7 +421,6 @@ const SquashLadderApp = () => {
             )}
 
             <AuthComponent onAuthStateChange={setCurrentUser}
-              onAuthStateChange={updateAuthState}
               currentUser={currentUser}
             />
           </div>
