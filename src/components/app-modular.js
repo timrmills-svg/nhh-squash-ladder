@@ -10,9 +10,7 @@ import {
   addChallenge, 
   addMatch, 
   updatePlayer, 
-  updateChallenge, 
-  subscribeToPlayers, 
-  subscribeToChallenges 
+  updateChallenge 
 } from "../services/firebaseService";
 import LadderView from './ladder';
 import ChallengesView from './challenges';
@@ -120,9 +118,6 @@ const SquashLadderApp = () => {
   const saveAppData = () => {
     try {
       if (currentUser) {
-        localStorage.setItem('nordea_hh_squash_players', JSON.stringify(players));
-        localStorage.setItem('nordea_hh_squash_challenges', JSON.stringify(challenges));
-        localStorage.setItem('nordea_hh_squash_matches', JSON.stringify(matches));
       }
     } catch (error) {
       console.error('Error saving app data:', error);
@@ -186,14 +181,14 @@ const SquashLadderApp = () => {
     }
   };
 
-  const handleChallengeResponse = (challengeId, response) => {
-    console.log("Challenge response:", challengeId, response); setChallenges(prev =>
-      prev.map(challenge =>
-        challenge.id === challengeId
-          ? { ...challenge, status: response }
-          : challenge
-      )
-    );
+  const handleChallengeResponse = async (challengeId, response) => {
+    try {
+      await updateChallenge(challengeId, { status: response });
+      const updatedChallenges = await getChallenges();
+      setChallenges(updatedChallenges);
+    } catch (error) {
+      console.error("Error updating challenge:", error);
+    }
   };
 
   const handleRecordMatch = (challengeId, player1Games, player2Games, isWalkover, gameScores = '') => {
