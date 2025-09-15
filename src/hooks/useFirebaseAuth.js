@@ -7,6 +7,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { UserLookupService } from "../services/userLookupService";
 
 export const useFirebaseAuth = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -23,12 +24,16 @@ export const useFirebaseAuth = () => {
             email: user.email,
             ...userDoc.data()
           });
+          // Update user lookup service on login
+          await UserLookupService.upsertUserProfile(user.email, userDoc.data().displayName, user.uid);
         } else {
           setCurrentUser({
             uid: user.uid,
             email: user.email,
-            displayName: user.email.split('@')[0] // fallback
+            ...userDoc.data()
           });
+          // Update user lookup service on login
+          await UserLookupService.upsertUserProfile(user.email, userDoc.data().displayName, user.uid);
         }
       } else {
         setCurrentUser(null);
@@ -44,6 +49,7 @@ export const useFirebaseAuth = () => {
     const user = userCredential.user;
     
     // Save additional user data to Firestore
+    // Save additional user data to Firestore
     await setDoc(doc(db, 'users', user.uid), {
       displayName,
       email,
@@ -51,6 +57,9 @@ export const useFirebaseAuth = () => {
       createdAt: new Date().toISOString(),
       isVerified: true
     });
+    
+    // Also save to UserLookupService for email notifications
+    await UserLookupService.upsertUserProfile(email, displayName, user.uid);
 
     return user;
   };

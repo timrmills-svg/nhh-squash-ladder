@@ -13,8 +13,6 @@ import {
   updateChallenge 
 } from "../services/firebaseService";
 import LadderView from './ladder';
-import { EmailService } from './emailService';
-import { UserLookupService } from '../services/userLookupService';
 import ChallengesView from './challenges';
 import { 
   StatCard, 
@@ -170,30 +168,8 @@ const SquashLadderApp = () => {
 
   const handleCreateChallenge = async (challengerId, challengedId) => {
     try {
-      const challenger = players.find(p => p.id === challengerId);
-      const challenged = players.find(p => p.id === challengedId);
-      
-      if (!challenger || !challenged) {
-        alert("Player not found");
-        return;
-      }
-      
       const newChallenge = createNewChallenge(challengerId, challengedId, players);
       await addChallenge(newChallenge);
-      
-      const challengedEmail = await UserLookupService.getEmailFromDisplayName(challenged.name);
-      
-      if (challengedEmail) {
-        await EmailService.sendChallengeCreatedEmail(
-          challenger.name,
-          challengedEmail,
-          challenged.name,
-          window.location.origin
-        );
-        console.log(`Challenge email sent to ${challengedEmail}`);
-      } else {
-        console.warn(`Could not find email for player: ${challenged.name}`);
-      }
       
       const updatedChallenges = await getChallenges();
       setChallenges(updatedChallenges);
