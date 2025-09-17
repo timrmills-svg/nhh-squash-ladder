@@ -13,7 +13,7 @@ import {
   updateChallenge 
 } from "../services/firebaseService";
 import LadderView from './ladder';
-import { EmailService } from './emailService';
+import { EmailService } from '../services/emailService';
 import { UserLookupService } from '../services/userLookupService';
 import ChallengesView from './challenges';
 import { 
