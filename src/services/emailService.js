@@ -21,7 +21,7 @@ export const EmailService = {
   },
 
   // Send immediate challenge notification
-  sendChallengeCreatedEmail: async (challengerName, challengedEmail, challengedName, appUrl = window.location.origin) => {
+  sendChallengeCreatedEmail: async (challengerName, challengedEmail, challengedName, appUrl = window.location.origin + "/#challenges") => {
     console.log(`📧 Queueing CHALLENGE NOTIFICATION EMAIL for ${challengedEmail}`);
     
     const notificationData = {
@@ -55,7 +55,7 @@ export const EmailService = {
           <strong>⚠️ Action Required: Please accept or decline this challenge</strong>
         </div>
         <p>If you don't respond within ${daysRemaining} days, the challenge will automatically expire.</p>
-        <p><a href="${window.location.origin}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Respond to Challenge</a></p>
+        <p><a href="${window.location.origin + "/#challenges"}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Respond to Challenge</a></p>
         <p>Best regards,<br>Nordea HH Squash Ladder System</p>
       `
     };
@@ -89,7 +89,7 @@ export const EmailService = {
             <strong>📝 IMPORTANT: Match results must be recorded within 24 hours after the 3-week deadline</strong>
           </div>
           <p>If the match is not played and recorded by the deadline, both players may face penalties according to ladder rules.</p>
-          <p><a href="${window.location.origin}" style="background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Record Your Match</a></p>
+          <p><a href="${window.location.origin + "/#challenges"}" style="background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Record Your Match</a></p>
           <p>Please coordinate with ${opponentName} immediately to schedule your match.</p>
           <p>Best regards,<br>Nordea HH Squash Ladder System</p>
         `
@@ -132,7 +132,7 @@ export const EmailService = {
             <strong>Deadline: EXPIRED</strong><br>
             <strong>Grace Period: 24 hours remaining</strong>
           </div>
-          <p><a href="${window.location.origin}" style="background: #dc2626; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">RECORD MATCH IMMEDIATELY</a></p>
+          <p><a href="${window.location.origin + "/#challenges"}" style="background: #dc2626; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">RECORD MATCH IMMEDIATELY</a></p>
           <p>Best regards,<br>Nordea HH Squash Ladder System</p>
         `
       };
