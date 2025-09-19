@@ -1,42 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
-  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged 
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { UserLookupService } from "../services/userLookupService";
 
 export const useFirebaseAuth = () => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [authData, setAuthData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Stabilize currentUser object reference using useMemo
+  const currentUser = useMemo(() => {
+    if (!authData) return null;
+    return {
+      uid: authData.uid,
+      email: authData.email,
+      displayName: authData.displayName,
+      ...authData.additionalData
+    };
+  }, [authData]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Get additional user data from Firestore
         const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setCurrentUser({
-            uid: user.uid,
-            email: user.email,
-            ...userDoc.data()
-          });
-          // Update user lookup service on login
-          await UserLookupService.upsertUserProfile(user.email, userDoc.data().displayName, user.uid);
-        } else {
-          setCurrentUser({
-            uid: user.uid,
-            email: user.email,
-            ...userDoc.data()
-          });
-          // Update user lookup service on login
-          await UserLookupService.upsertUserProfile(user.email, userDoc.data().displayName, user.uid);
-        }
+        const additionalData = userDoc.exists() ? userDoc.data() : {};
+        
+        console.log("=== SETTING AUTH DATA ===", user.email);
+        setAuthData({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || user.email,
+          additionalData
+        });
       } else {
-        setCurrentUser(null);
+        setAuthData(null);
       }
       setLoading(false);
     });
@@ -44,28 +44,15 @@ export const useFirebaseAuth = () => {
     return unsubscribe;
   }, []);
 
-  const register = async (email, password, displayName) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // Save additional user data to Firestore
-    // Save additional user data to Firestore
-    await setDoc(doc(db, 'users', user.uid), {
-      displayName,
-      email,
-      role: 'player',
-      createdAt: new Date().toISOString(),
-      isVerified: true
-    });
-    
-    // Also save to UserLookupService for email notifications
-    await UserLookupService.upsertUserProfile(email, displayName, user.uid);
-
-    return user;
-  };
-
   const login = async (email, password) => {
-    return await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log("=== FIREBASE AUTH SUCCESS ===", result.user.email);
+      return result;
+    } catch (error) {
+      console.log("=== FIREBASE AUTH FAILED ===", error.code, error.message);
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -75,7 +62,6 @@ export const useFirebaseAuth = () => {
   return {
     currentUser,
     loading,
-    register,
     login,
     logout
   };

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+// src/components/auth.js - Fixed version to prevent render loop
+
+import React, { useState, useRef } from 'react';
 import { User, Lock, Mail, Eye, EyeOff, LogOut } from 'lucide-react';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 import { Modal, Button, Input } from './shared';
@@ -16,13 +18,17 @@ const AuthComponent = ({ onAuthStateChange }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Use ref to store the callback and avoid stale closures
+  const onAuthStateChangeRef = useRef();
+  onAuthStateChangeRef.current = onAuthStateChange;
 
-  // Pass auth state changes to parent component
+  // FIXED: Remove onAuthStateChange from dependencies to prevent render loop
   React.useEffect(() => {
-    if (onAuthStateChange) {
-      onAuthStateChange(currentUser);
+    if (onAuthStateChangeRef.current) {
+      onAuthStateChangeRef.current(currentUser);
     }
-  }, [currentUser, onAuthStateChange]);
+  }, [currentUser]); // Only depend on currentUser, not the callback
 
   const validateForm = () => {
     const newErrors = {};
@@ -51,42 +57,43 @@ const AuthComponent = ({ onAuthStateChange }) => {
       }
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const formErrors = validateForm();
+    
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      if (authMode === 'login') {
-        await login(formData.email, formData.password);
-      } else {
+      if (authMode === 'register') {
         await register(formData.email, formData.password, formData.displayName);
+      } else {
+        await login(formData.email, formData.password);
       }
       setShowAuthModal(false);
-      resetForm();
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        displayName: ''
+      });
     } catch (error) {
-        // Convert Firebase errors to user-friendly messages
-        let friendlyMessage = "Login failed. Please try again.";
-        if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
-          friendlyMessage = "Invalid email or password. Please check your credentials.";
-        } else if (error.code === "auth/invalid-email") {
-          friendlyMessage = "Please enter a valid email address.";
-        } else if (error.code === "auth/weak-password") {
-          friendlyMessage = "Password should be at least 6 characters long.";
-        } else if (error.code === "auth/email-already-in-use") {
-          friendlyMessage = "An account with this email already exists. Try signing in instead.";
-        } else if (error.code === "auth/network-request-failed") {
-          friendlyMessage = "Network error. Please check your connection and try again.";
-        } else if (error.message.includes("api-key-not-valid")) {
-          friendlyMessage = "Service temporarily unavailable. Please try again later.";
-        }
-        setErrors({ general: friendlyMessage });
+      setErrors({ general: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -100,49 +107,42 @@ const AuthComponent = ({ onAuthStateChange }) => {
     }
   };
 
-  const resetForm = () => {
+  const switchMode = () => {
+    setAuthMode(authMode === 'login' ? 'register' : 'login');
+    setErrors({});
     setFormData({
       email: '',
       password: '',
       confirmPassword: '',
       displayName: ''
     });
-    setErrors({});
-    setShowPassword(false);
-  };
-
-  const switchAuthMode = () => {
-    setAuthMode(authMode === 'login' ? 'register' : 'login');
-    resetForm();
-  };
-
-  const handleInputChange = (field) => (e) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   if (currentUser) {
     return (
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
-          <User className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-900">
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <User className="w-5 h-5 text-gray-600" />
+          <span className="text-gray-700">
             {currentUser.displayName || currentUser.email}
           </span>
         </div>
         <Button
           onClick={handleLogout}
-          variant="secondary"
+          variant="outline"
           size="sm"
-          icon={LogOut}
+          className="flex items-center space-x-2"
         >
-          Logout
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </Button>
       </div>
     );
@@ -152,110 +152,116 @@ const AuthComponent = ({ onAuthStateChange }) => {
     <>
       <Button
         onClick={() => setShowAuthModal(true)}
-        variant="primary"
-        icon={User}
+        className="flex items-center space-x-2"
       >
-        Login
+        <Lock className="w-4 h-4" />
+        <span>Login</span>
       </Button>
 
-      <Modal
-        isOpen={showAuthModal}
-        onClose={() => {
-          setShowAuthModal(false);
-          resetForm();
-        }}
-        title={authMode === 'login' ? 'Sign In' : 'Create Account'}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)}>
+        <div className="p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            {authMode === 'login' ? 'Sign In' : 'Create Account'}
+          </h2>
+
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 rounded p-3">
-              <p className="text-red-600 text-sm">{errors.general}</p>
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
+              {errors.general}
             </div>
           )}
 
-          {authMode === 'register' && (
-            <>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {authMode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display Name
+                </label>
+                <Input
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(e) => handleInputChange('displayName', e.target.value)}
+                  placeholder="Your display name"
+                  icon={User}
+                  error={errors.displayName}
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <Input
-                label="Display Name"
-                value={formData.displayName}
-                onChange={handleInputChange('displayName')}
-                placeholder="Your name as it will appear on the ladder"
-                required
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="your.email@example.com"
+                icon={Mail}
+                error={errors.email}
               />
-              {errors.displayName && (
-                <div className="text-red-600 text-sm -mt-2">{errors.displayName}</div>
-              )}
-            </>
-          )}
+            </div>
 
-          <Input
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="your@email.com"
-            required
-          />
-          {errors.email && (
-            <div className="text-red-600 text-sm -mt-2">{errors.email}</div>
-          )}
-
-          <div className="relative">
-            <Input
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Enter your password"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          {errors.password && (
-            <div className="text-red-600 text-sm -mt-2">{errors.password}</div>
-          )}
-
-          {authMode === 'register' && (
-            <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <Input
-                label="Confirm Password"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange('confirmPassword')}
-                placeholder="Confirm your password"
-                required
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="Your password"
+                icon={Lock}
+                error={errors.password}
+                rightIcon={showPassword ? EyeOff : Eye}
+                onRightIconClick={() => setShowPassword(!showPassword)}
               />
-              {errors.confirmPassword && (
-                <div className="text-red-600 text-sm -mt-2">{errors.confirmPassword}</div>
-              )}
-            </>
-          )}
+            </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1"
-              variant="primary"
-            >
-              {isLoading ? 'Please wait...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}
-            </Button>
-            <Button
-              type="button"
-              onClick={switchAuthMode}
-              className="flex-1"
-              variant="secondary"
-            >
-              {authMode === 'login' ? 'Create Account' : 'Sign In'}
-            </Button>
-          </div>
-        </form>
+            {authMode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  placeholder="Confirm your password"
+                  icon={Lock}
+                  error={errors.confirmPassword}
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col space-y-3 pt-4">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{authMode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                  </div>
+                ) : (
+                  authMode === 'login' ? 'Sign In' : 'Create Account'
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={switchMode}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                {authMode === 'login' 
+                  ? "Don't have an account? Sign up" 
+                  : "Already have an account? Sign in"
+                }
+              </button>
+            </div>
+          </form>
+        </div>
       </Modal>
     </>
   );

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Target, Activity, TrendingUp, User, Users, Lock, FileText } from 'lucide-react';
-import LoginWithGuide from './LoginWithGuide';
-import OpeningAnimation from './OpeningAnimation';
 
 import AuthComponent from './auth';
 import { 
@@ -61,7 +59,6 @@ const SquashLadderApp = () => {
     }
   ]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showVideo, setShowVideo] = useState(true);
 
   const navigationItems = [
     { key: 'ladder', label: 'Ladder', icon: Trophy, requiresAuth: true },
@@ -249,10 +246,6 @@ const SquashLadderApp = () => {
     setChallenges(prev => prev.filter(c => c.id !== challengeId));
   };
 
-  const handleVideoComplete = () => {
-    setShowVideo(false);
-  };
-
   const handleNavigation = (view) => {
     const navItem = navigationItems.find(item => item.key === view);
     
@@ -307,7 +300,15 @@ const SquashLadderApp = () => {
   };
 
   const LoginRequiredView = () => (
-    <LoginWithGuide currentUser={currentUser} onAuthStateChange={setCurrentUser} />
+    <div className="min-h-96 flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto">
+        <Lock className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+        <p className="text-gray-600 mb-6">
+          Please log in to access the Nordea HH Squashladder.
+        </p>
+      </div>
+    </div>
   );
 
   const renderCurrentView = () => {
@@ -361,12 +362,6 @@ const SquashLadderApp = () => {
   };
 
   const stats = getStatistics();
-
-  if (showVideo) {
-    return (
-      <OpeningAnimation onComplete={handleVideoComplete} currentUser={currentUser} />
-    );
-  }
 
   if (isLoading) {
     return (

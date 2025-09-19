@@ -36,7 +36,7 @@ const LoginWithGuide = ({ currentUser, onAuthStateChange }) => {
               <div className="text-6xl mb-4">🏆</div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to NHH Squash Ladder</h2>
               <p className="text-gray-600 text-lg mb-6">
-                Join Nordea House Hamburg's competitive squash ladder. Challenge colleagues, 
+                Join Nordea Hermes Hus competitive squash ladder. Challenge colleagues, 
                 track your progress, and climb the rankings in our professional tournament system.
               </p>
               
