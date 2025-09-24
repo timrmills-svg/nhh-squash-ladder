@@ -11,7 +11,7 @@ import {
   validatePlayerName,
   createNewPlayer
 } from './shared';
-
+import { addPlayer } from '../services/firebaseService';
 const LadderView = ({ players, setPlayers, onChallenge, currentUser, challenges = [] }) => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [currentPlayerRecord, setCurrentPlayerRecord] = useState(null);
@@ -28,33 +28,41 @@ const LadderView = ({ players, setPlayers, onChallenge, currentUser, challenges 
     setCurrentPlayerRecord(playerRecord || null);
   }, [currentUser, players]);
 
-  const handleJoinLadder = () => {
-    if (!currentUser) {
-      alert('Please login to join the ladder');
-      return;
-    }
+  const handleJoinLadder = async () => {
+  if (!currentUser) {
+    alert('Please login to join the ladder');
+    return;
+  }
 
-    const playerName = currentUser.displayName;
-    const error = validatePlayerName(playerName);
-    if (error) {
-      return;
-    }
+  if (currentPlayerRecord) {
+    alert('You are already on the ladder');
+    return;
+  }
 
-    const nameExists = players.some(p => 
-      p.name.toLowerCase().trim() === playerName.toLowerCase().trim()
-    );
-    
-    if (nameExists) {
-      alert('You are already on the ladder');
-      return;
-    }
-
+  try {
     const newPosition = players.length + 1;
-    const newPlayer = createNewPlayer(playerName, newPosition);
+    await addPlayer({
+      name: currentUser.displayName,
+      email: currentUser.email,
+      position: newPosition,
+      participationPoints: 0,
+      wins: 0,
+      losses: 0,
+      isActive: true,
+      joinDate: new Date().toISOString()
+    });
     
-    setPlayers([...players, newPlayer]);
+    // Refresh data from Firebase
+    if (props.onRefresh) {
+      props.onRefresh();
+    }
+    
     setShowJoinModal(false);
-  };
+  } catch (error) {
+    console.error('Error joining ladder:', error);
+    alert('Error joining ladder. Please try again.');
+  }
+};
 
   const sortedPlayers = [...players].sort((a, b) => a.position - b.position);
   const canJoinLadder = currentUser && !currentPlayerRecord;
