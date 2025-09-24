@@ -319,6 +319,7 @@ const SquashLadderApp = () => {
       case 'ladder':
         return (
           <LadderView
+            onRefresh={loadAppData}
             players={players}
             setPlayers={setPlayers}
             onChallenge={handleChallengePlayer}

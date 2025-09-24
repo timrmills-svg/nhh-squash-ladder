@@ -12,7 +12,7 @@ import {
   createNewPlayer
 } from './shared';
 import { addPlayer } from '../services/firebaseService';
-const LadderView = ({ players, setPlayers, onChallenge, currentUser, challenges = [] }) => {
+const LadderView = ({ players, setPlayers, onChallenge, currentUser, challenges = [], onRefresh }) => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [currentPlayerRecord, setCurrentPlayerRecord] = useState(null);
 
