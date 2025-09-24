@@ -53,8 +53,8 @@ const LadderView = ({ players, setPlayers, onChallenge, currentUser, challenges 
     });
     
     // Refresh data from Firebase
-    if (props.onRefresh) {
-      props.onRefresh();
+    if (onRefresh) {
+      onRefresh();
     }
     
     setShowJoinModal(false);
